@@ -168,13 +168,11 @@ func main() {
 	var wg sync.WaitGroup
 
 	// testes com diferentes valores de N e T
-	// for _, N := range []int{5, 7, 9} {
-	for _, N := range []int{5, 7/*, 9*/} {
+	for _, N := range []int{5, 7, 9} {
+	// for _, N := range []int{5, 7/*, 9*/} {
 		for _, T := range []int{1, 4, 16, 64, 256} {
-		// for _, T := range []int{256, 64, 16, 4, 1} {
 			pas.Carregamento(N)
 
-			// fmt.Printf("Teste com N=%d, T=%d:\n", N, T)
 			file, err := CreateOutputFile(CreateFileName(N, T))
 			if err != nil {
 				fmt.Println("Erro ao criar o arquivo de saída:", err)
