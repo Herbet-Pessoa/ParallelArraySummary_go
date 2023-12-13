@@ -7,7 +7,21 @@ import (
 	"os"
 	"sync"
 	"time"
+	// "net/http/pprof"
 )
+
+// func init() {
+// 	http.HandleFunc("/debug/pprof/", Index)
+// 	http.HandleFunc("/debug/pprof/cmdline", Cmdline)
+// 	http.HandleFunc("/debug/pprof/profile", Profile)
+// 	http.HandleFunc("/debug/pprof/symbol", Symbol)
+// 	http.HandleFunc("/debug/pprof/trace", Trace)
+// }
+// func init() {
+// 	go func() {
+// 		http.ListenAndServe(":1234", nil)
+// 	}()
+// }
 
 type Object struct {
 	ID    int
@@ -16,8 +30,10 @@ type Object struct {
 }
 
 type ParallelArraySummary struct {
-	Objects []Object
+    Totals    []float64
+    Grupos    []int
 }
+
 
 type partialResult struct {
 	localTotalSum             float64
@@ -27,18 +43,48 @@ type partialResult struct {
 }
 
 func (pas *ParallelArraySummary) Carregamento(N int) {
-	pas.Objects = make([]Object, 0)
+    nElements := int(math.Pow10(N))
 
-	nElements := int(math.Pow10(N))
-	for i := 0; i < nElements; i++ {
-		object := Object{
-			ID:    i + 1,
-			Total: rand.Float64() * 10,
-			Grupo: rand.Intn(5) + 1,
-		}
-		pas.Objects = append(pas.Objects, object)
-	}
+	var wg sync.WaitGroup
+
+	// Define channels para mandar os resultados
+    totalsChannel := make(chan float64, nElements)
+    gruposChannel := make(chan int, nElements)
+
+	// função para preencher 
+	fillElement := func(i int) {
+        total := rand.Float64() * 10
+        grupo := rand.Intn(5) + 1
+
+        totalsChannel <- total
+        gruposChannel <- grupo
+
+		wg.Done()
+    }
+
+	// Start goroutines para preencher em paralelo
+    for i := 0; i < nElements; i++ {
+		wg.Add(1)
+        go fillElement(i)
+    }
+
+	// Esperar todas as goroutines terminarem de preencher
+    wg.Wait()
+
+    pas.Totals = make([]float64, nElements)
+    pas.Grupos = make([]int, nElements)
+
+    for i := 0; i < nElements; i++ {
+        pas.Totals[i] = <-totalsChannel
+        pas.Grupos[i] = <-gruposChannel
+    }
+
+	// Fechando os canais
+    close(totalsChannel)
+    close(gruposChannel)
 }
+
+
 
 func CreateFileName(N int, T int) string {
 	return fmt.Sprintf("n%d_t%d", N, T)
@@ -62,6 +108,8 @@ func CloseAndSaveFile(file *os.File) {
 	// Fecha o arquivo
 	file.Close()
 }
+
+
 
 func (pas *ParallelArraySummary) Processamento(T int) (int64, error) {
 	startTime := time.Now()
@@ -95,16 +143,17 @@ func (pas *ParallelArraySummary) Processamento(T int) (int64, error) {
 		localGreaterOrEqualsCount := 0
 
 		for i := start; i < end; i++ {
-			object := pas.Objects[i]
+            total := pas.Totals[i]
+            grupo := pas.Grupos[i]
 
-			localTotalSum += object.Total
-			localGroupSum[object.Grupo] += object.Total
+            localTotalSum += total
+            localGroupSum[grupo] += total
 
-			if object.Total < 5 {
-				localLessThanFiveCount++
-			} else {
-				localGreaterOrEqualsCount++
-			}
+            if total < 5 {
+                localLessThanFiveCount++
+            } else {
+                localGreaterOrEqualsCount++
+            }
 		}
 
 		// Envia resultados parciais para o canal
@@ -117,7 +166,7 @@ func (pas *ParallelArraySummary) Processamento(T int) (int64, error) {
 	}
 
 	// Divide o trabalho entre as threads
-	numObjects := len(pas.Objects)
+	numObjects := len(pas.Totals)
 	chunkSize := numObjects / T
 	for i := 0; i < T; i++ {
 		wg.Add(1)
@@ -159,6 +208,7 @@ func (pas *ParallelArraySummary) Processamento(T int) (int64, error) {
 	fmt.Printf("Número de IDs com total < 5: %d\n", lessThanFiveCount)
 	fmt.Printf("Número de IDs com total >= 5: %d\n", greaterOrEqualsCount)
 
+
 	return elapsedTime, nil
 }
 
@@ -168,8 +218,8 @@ func main() {
 	var wg sync.WaitGroup
 
 	// testes com diferentes valores de N e T
-	for _, N := range []int{5, 7, 9} {
-	// for _, N := range []int{5, 7/*, 9*/} {
+	// for _, N := range []int{5, 7, 9} {
+	for _, N := range []int{5, 7/*, 9*/} {
 		for _, T := range []int{1, 4, 16, 64, 256} {
 			pas.Carregamento(N)
 
