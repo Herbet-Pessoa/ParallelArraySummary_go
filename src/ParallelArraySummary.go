@@ -7,21 +7,7 @@ import (
 	"os"
 	"sync"
 	"time"
-	// "net/http/pprof"
 )
-
-// func init() {
-// 	http.HandleFunc("/debug/pprof/", Index)
-// 	http.HandleFunc("/debug/pprof/cmdline", Cmdline)
-// 	http.HandleFunc("/debug/pprof/profile", Profile)
-// 	http.HandleFunc("/debug/pprof/symbol", Symbol)
-// 	http.HandleFunc("/debug/pprof/trace", Trace)
-// }
-// func init() {
-// 	go func() {
-// 		http.ListenAndServe(":1234", nil)
-// 	}()
-// }
 
 type Object struct {
 	ID    int
@@ -218,8 +204,8 @@ func main() {
 	var wg sync.WaitGroup
 
 	// testes com diferentes valores de N e T
-	// for _, N := range []int{5, 7, 9} {
-	for _, N := range []int{5, 7/*, 9*/} {
+	for _, N := range []int{5, 7, 9} {
+	// for _, N := range []int{5, 7/*, 9*/} {
 		for _, T := range []int{1, 4, 16, 64, 256} {
 			pas.Carregamento(N)
 
