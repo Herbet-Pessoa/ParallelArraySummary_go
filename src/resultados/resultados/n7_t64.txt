@@ -1,0 +1,12 @@
+Teste com N=7, T=64:
+Total Sum: 49984963.74
+Group Sums:
+Grupo 3: 10000380.15
+Grupo 4: 10002240.34
+Grupo 5: 9999257.99
+Grupo 1: 9994202.31
+Grupo 2: 9988882.94
+Número de IDs com total < 5: 5003250
+Número de IDs com total >= 5: 4996750
+Tempo de processamento: 62162400 nanossegundos
+------

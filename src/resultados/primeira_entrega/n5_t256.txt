@@ -1,0 +1,12 @@
+Teste com N=5, T=256:
+Total Sum: 499413.18
+Group Sums:
+Grupo 2: 100140.96
+Grupo 3: 98818.19
+Grupo 4: 99766.33
+Grupo 5: 100791.49
+Grupo 1: 99896.20
+Número de IDs com total < 5: 49968
+Número de IDs com total >= 5: 50032
+Tempo de processamento: 1091700 nanossegundos
+------
